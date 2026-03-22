@@ -1,1 +1,1 @@
-console.log("Day 81");
+console.log("Day 82");
