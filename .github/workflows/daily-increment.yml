@@ -1,0 +1,57 @@
+name: Daily Increment
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  increment:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Increment day number
+        run: |
+          node -e "
+          const fs = require('fs');
+
+          const file = 'index.js';
+          let content = fs.readFileSync(file, 'utf8');
+
+          const match = content.match(/Day\s+(\d+)/);
+
+          if (!match) {
+            throw new Error('Could not find Day number');
+          }
+
+          const current = parseInt(match[1], 10);
+          const next = current + 1;
+
+          content = content.replace(
+            /Day\s+\d+/,
+            'Day ' + next
+          );
+
+          fs.writeFileSync(file, content);
+
+          console.log('Updated to Day ' + next);
+          "
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add index.js
+
+          git diff --cached --quiet || git commit -m "Increment day counter"
+
+      - name: Push changes
+        run: git push
